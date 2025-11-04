@@ -53,10 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function login(email: string, password: string) {
     try {
       const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      setToken(res.data.token);
-      setUser(res.data.user);
-      return true;
+      // Backend returns: { token, id, name, email, role }
+      const { token, id, name, email: userEmail, role } = res.data;
+      if (token && id) {
+        localStorage.setItem("token", token);
+        setToken(token);
+        setUser({ id, name, email: userEmail, role });
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error("Login error", err);
       return false;
@@ -66,10 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function register(name: string, email: string, password: string) {
     try {
       const res = await api.post("/auth/register", { name, email, password });
-      localStorage.setItem("token", res.data.token);
-      setToken(res.data.token);
-      setUser(res.data.user);
-      return true;
+      // Backend register endpoint doesn't return a token - user needs to login
+      // Just confirm registration was successful (user was created)
+      // The response contains: { id, name, email, role }
+      if (res.data && res.data.id) {
+        // Registration successful - don't set token, user needs to login
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error("Register error", err);
       return false;

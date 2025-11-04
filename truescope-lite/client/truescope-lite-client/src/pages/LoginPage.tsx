@@ -1,17 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/pages/LoginPage.tsx
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const message = (location.state as any)?.message;
+    if (message) {
+      setSuccessMessage(message);
+    }
+  }, [location]);
 
   const disabled = submitting || !email.trim() || password.length < 6;
 
@@ -22,7 +31,7 @@ export default function LoginPage() {
     try {
       const ok = await login(email.trim(), password);
       if (ok) {
-        navigate("/claims");
+        navigate("/dashboard");
       } else {
         setError("Invalid email or password");
       }
@@ -69,6 +78,11 @@ export default function LoginPage() {
           style={{ width: "100%", padding: 10, marginTop: 6 }}
         />
 
+        {successMessage && (
+          <div style={{ color: "green", marginTop: 12, padding: "12px", background: "#d1fae5", borderRadius: "8px" }}>
+            {successMessage}
+          </div>
+        )}
         {error && (
           <div style={{ color: "crimson", marginTop: 12 }}>{error}</div>
         )}

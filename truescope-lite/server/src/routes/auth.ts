@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { requireAuth } from '../middleware/auth';
 
 const r = express.Router();
 
@@ -64,6 +65,24 @@ r.post('/login', async function (req, res) {
         return res.json({ token, id: user._id, name: user.name, email: user.email, role: user.role });
     } catch (err) {
         console.error('Login error', err);
+        return res.status(500).json({ error: 'internal error' });
+    }
+});
+
+// Get current user
+r.get('/me', requireAuth, async function (req: any, res) {
+    try {
+        const user = req.user;
+        return res.json({ 
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (err) {
+        console.error('Get me error', err);
         return res.status(500).json({ error: 'internal error' });
     }
 });
