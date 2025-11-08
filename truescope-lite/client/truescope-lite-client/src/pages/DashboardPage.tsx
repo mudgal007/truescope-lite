@@ -33,6 +33,8 @@ export default function DashboardPage() {
   const [items, setItems] = useState<Claim[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   // Filters
   const [q, setQ] = useState<string>("");
@@ -146,6 +148,23 @@ export default function DashboardPage() {
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  }
+
+  async function handleVerifyClaim(claimId: string, e: React.MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation();
+    try {
+      setError(null);
+      setSuccess(null);
+      setVerifyingId(claimId);
+      const res = await api.post(`/claims/${claimId}/verify`);
+      fetchClaims();
+      setSuccess(`Status updated to ${res.data?.status ?? 'unknown'}`);
+    } catch (err: any) {
+      setError(err?.message || "Verification failed");
+    }
+    finally {
+      setVerifyingId(null);
+    }
   }
 
   return (
@@ -323,6 +342,7 @@ export default function DashboardPage() {
           {/* Loading/Error */}
           {loading && <div style={{ padding: "24px", textAlign: "center" }}>Loading…</div>}
           {error && <div style={{ color: "crimson", padding: "16px", background: "#fee", borderRadius: "8px" }}>{error}</div>}
+          {success && <div style={{ color: "#065f46", padding: "16px", background: "#d1fae5", borderRadius: "8px" }}>{success}</div>}
 
           {/* Claims List */}
           {!loading && !error && items.length === 0 && (
@@ -404,6 +424,20 @@ export default function DashboardPage() {
                           Open source →
                         </a>
                       )}
+                      <button
+                        onClick={(e) => handleVerifyClaim(it._id, e)}
+                        style={{
+                          padding: "6px 10px",
+                          background: "#111827",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {verifyingId === it._id ? "Verifying…" : "Verify with AI"}
+                      </button>
                     </div>
                   </div>
                 );
